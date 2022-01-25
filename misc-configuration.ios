@@ -1,3 +1,46 @@
 ------------------------------------------------
 Basic Configuration
 ------------------------------------------------
+-----------------------------------------------------------
+ISP Router
+-----------------------------------------------------------
+!
+interface GigabitEthernet0/0
+ ip address 203.0.113.2 255.255.255.252
+!
+interface GigabitEthernet0/1
+ ip address 198.51.100.2 255.255.255.252
+!
+router bgp 65550
+ bgp log-neighbor-changes
+ redistribute connected
+ redistribute static
+ neighbor 198.51.100.1 remote-as 64477
+ neighbor 198.51.100.1 password cisco
+ neighbor 203.0.113.1 remote-as 64477
+ neighbor 203.0.113.1 password cisco
+!
+-----------------------------------------------------------
+Router 1
+-----------------------------------------------------------
+!
+interface GigabitEthernet0/0
+ ip address 203.0.113.1 255.255.255.252
+!
+router bgp 64477
+ bgp log-neighbor-changes
+ neighbor 203.0.113.2 remote-as 65550
+ neighbor 203.0.113.2 password cisco
+!
+-----------------------------------------------------------
+Router 2
+-----------------------------------------------------------
+!
+interface GigabitEthernet0/0
+ ip address 198.51.100.1 255.255.255.252
+!
+router bgp 64477
+ bgp log-neighbor-changes
+ neighbor 198.51.100.2 remote-as 65550
+ neighbor 198.51.100.2 password cisco
+!
