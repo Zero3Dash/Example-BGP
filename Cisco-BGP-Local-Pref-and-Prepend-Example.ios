@@ -1,0 +1,31 @@
+! 4PEG Configuration Template
+! http://4peg.com/ktk8C80kpn3H
+!--------------------------------------------------------------------------
+! Configure 1 as preferred path and route poison 2
+!--------------------------------------------------------------------------
+!
+router bgp [[BGP-ASN-ID]]
+ bgp log-neighbor-changes 
+ address-family ipv4 unicast 
+  neighbor [[BGP-NEIGHBOR-1-IP]] remote-as [[BGP-NEIGHBOR-1-ASN]]
+  neighbor [[BGP-NEIGHBOR-1-IP]] activate 
+  neighbor [[BGP-NEIGHBOR-1-IP]] route-map rm.[[ROUTE-MAP]]-locpref in 
+  neighbor [[BGP-NEIGHBOR-2-IP]] remote-as [[BGP-NEIGHBOR-2-ASN]]
+  neighbor [[BGP-NEIGHBOR-2-IP]] activate 
+  neighbor [[BGP-NEIGHBOR-2-IP]] route-map rm.[[ROUTE-MAP]]-prepend out 
+  network [[NETWORK-IP]] mask [[SUBNET MASK]]
+  no auto-summary 
+  no synchronization 
+ exit-address-family 
+! 
+!--- default local pref is 100 
+!--- higher the metric the more preferred the route 
+!--- to be applied on the inbound 
+route-map rm.[[ROUTE-MAP]]-locpref permit 5 
+ set local-preference [[LOCAL PREF METRIC]]
+! 
+!--- route poisoning in the outbound 
+!--- to advertise back that this is less preferred 
+route-map rm.[[ROUTE-MAP]]-prepend permit 5 
+ set as-path prepend [[BGP-ASN-ID]] [[BGP-ASN-ID]] 
+! 
