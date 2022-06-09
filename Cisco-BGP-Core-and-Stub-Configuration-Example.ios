@@ -1,0 +1,73 @@
+!--------------------------------------------------------------------------
+! BGP Core Router
+!--------------------------------------------------------------------------
+!
+!--make sure a default route is present, either learn or static
+ip route 0.0.0.0 0.0.0.0 Null0
+!
+!--interface to end-user routing device
+interface Ethernet0/0
+ description *** to-bgp-stub-router ***
+ ip address 11.0.0.1 255.255.255.252
+!
+!--the bgp asn to the core
+!--only allow this asn to the core
+ip as-path access-list 1 permit 100
+ip as-path access-list 1 deny .*
+!
+!--the bgp asn to the end-user routing device
+!--only send this asn to the end-user routing device
+ip as-path access-list 2 permit 200
+ip as-path access-list 2 deny .*
+!
+!--create route maps for bgp
+route-map dg-asn-100 permit 10
+ match as-path 1
+!
+route-map dg-asn-200 permit 10
+ match as-path 2
+!
+!--create the bgp configuration
+router bgp 200
+ bgp asnotation dot
+ bgp log-neighbor-changes
+ neighbor 11.0.0.2 remote-as 100
+ !
+ address-family ipv4
+  neighbor 11.0.0.2 activate
+  neighbor 11.0.0.2 default-originate
+  neighbor 11.0.0.2 route-map dg-asn-100 in
+  neighbor 11.0.0.2 route-map dg-asn-200 out
+  default-information originate
+  auto-summary
+ exit-address-family
+ !
+!
+!--------------------------------------------------------------------------
+! BGP Stub Router
+!--------------------------------------------------------------------------
+!
+!--forwarding route to end user device
+ip route 12.0.0.0 255.255.255.0 12.0.0.2
+!
+!--interface to end-user
+interface GigabitEthernet0/0
+ description *** end-user-presentation ***
+ ip address 12.0.0.1 255.255.255.0
+!
+!--interface to core routing device
+interface GigabitEthernet0/1
+ description *** to-bgp-core-router ***
+ ip address 11.0.0.2 255.255.255.252
+!
+!--create the bgp configuration
+router bgp 100
+ bgp log-neighbor-changes
+ neighbor 11.0.0.1 remote-as 200
+ !
+ address-family ipv4
+  network 12.0.0.0 mask 255.255.255.0
+  neighbor 11.0.0.1 activate
+ exit-address-family
+ !
+!
